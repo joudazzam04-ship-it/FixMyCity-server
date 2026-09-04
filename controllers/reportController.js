@@ -332,3 +332,72 @@ export const addNote = async (req, res) => {
     res.status(500).json({ message: "Failed to add note" });
   }
 };
+
+
+export const deleteReport = async (req, res) => {
+  const { id } = req.params;
+  const { user_id } = req.body;
+
+  try {
+    const check = await db.query(
+      "SELECT reported_by, status FROM reports WHERE id = $1",
+      [id]
+    );
+
+    if (check.rows.length === 0) {
+      return res.status(404).json({ message: "Report not found" });
+    }
+
+    const report = check.rows[0];
+
+    if (report.reported_by !== Number(user_id)) {
+      return res.status(403).json({ message: "You can only delete your own reports" });
+    }
+
+    if (report.status !== "Pending Review") {
+      return res.status(400).json({
+        message: "Reports can only be deleted before they are assigned"
+      });
+    }
+
+    await db.query("DELETE FROM reports WHERE id = $1", [id]);
+
+    res.json({ message: "Report deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting report:", error);
+    res.status(500).json({ message: "Failed to delete report" });
+  }
+};
+
+
+export const addReportImage = async (req, res) => {
+  const { id } = req.params;
+  const { image } = req.body;
+
+  if (!image) {
+    return res.status(400).json({ message: "An image is required" });
+  }
+
+  try {
+    const reportCheck = await db.query(
+      "SELECT id FROM reports WHERE id = $1",
+      [id]
+    );
+
+    if (reportCheck.rows.length === 0) {
+      return res.status(404).json({ message: "Report not found" });
+    }
+
+    const result = await db.query(
+      `INSERT INTO report_images (report_id, image_path)
+       VALUES ($1, $2)
+       RETURNING *`,
+      [id, image]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error("Error adding image:", error);
+    res.status(500).json({ message: "Failed to add image" });
+  }
+};

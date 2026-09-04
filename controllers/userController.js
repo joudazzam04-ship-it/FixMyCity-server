@@ -75,3 +75,33 @@ export const updateUserStatus = async (req, res) => {
     res.status(500).json({ message: "Failed to update user status" });
   }
 };
+
+export const createEmployee = async (req, res) => {
+  const { name, email, password, phone, department_id } = req.body;
+
+  if (!name || !email || !password || !department_id) {
+    return res.status(400).json({
+      message: "Name, email, password and department are required"
+    });
+  }
+
+  try {
+    const exists = await db.query("SELECT id FROM users WHERE email = $1", [email]);
+
+    if (exists.rows.length > 0) {
+      return res.status(400).json({ message: "An account with this email already exists" });
+    }
+
+    const result = await db.query(
+      `INSERT INTO users (name, email, password, phone, role, department_id)
+       VALUES ($1, $2, $3, $4, 'employee', $5)
+       RETURNING id, name, email, phone, role, status, joined_on, department_id`,
+      [name, email, password, phone, department_id]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error("Error creating employee:", error);
+    res.status(500).json({ message: "Failed to create employee" });
+  }
+};
