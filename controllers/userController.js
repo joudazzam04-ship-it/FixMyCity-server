@@ -77,11 +77,11 @@ export const updateUserStatus = async (req, res) => {
 };
 
 export const createEmployee = async (req, res) => {
-  const { name, email, password, phone, department_id } = req.body;
+  const { name, email, phone, department_id } = req.body;
 
-  if (!name || !email || !password || !department_id) {
+  if (!name || !email  || !department_id) {
     return res.status(400).json({
-      message: "Name, email, password and department are required"
+      message: "Name, email and department are required"
     });
   }
 
@@ -93,10 +93,10 @@ export const createEmployee = async (req, res) => {
     }
 
     const result = await db.query(
-      `INSERT INTO users (name, email, password, phone, role, department_id)
+      `INSERT INTO users (name, email, phone, role, department_id)
        VALUES ($1, $2, $3, $4, 'employee', $5)
        RETURNING id, name, email, phone, role, status, joined_on, department_id`,
-      [name, email, password, phone, department_id]
+      [name, email, phone, department_id]
     );
 
     res.status(201).json(result.rows[0]);
@@ -105,3 +105,65 @@ export const createEmployee = async (req, res) => {
     res.status(500).json({ message: "Failed to create employee" });
   }
 };
+
+
+export const getUserById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await db.query(
+      `SELECT
+         u.id,
+         u.name,
+         u.email,
+         u.phone,
+         u.role,
+         u.status,
+         u.joined_on,
+         u.department_id,
+         d.name AS department
+       FROM users u
+       LEFT JOIN departments d ON u.department_id = d.id
+       WHERE u.id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ message: "Failed to fetch user" });
+  }
+};
+
+export const updateProfile = async (req, res) => {
+  const { id } = req.params;
+  const { name, phone } = req.body;
+
+  if (!name || name.trim() === "") {
+    return res.status(400).json({ message: "Name is required" });
+  }
+
+  try {
+    const result = await db.query(
+      `UPDATE users
+       SET name = $1, phone = $2
+       WHERE id = $3
+       RETURNING id, name, email, phone, role, status, joined_on, department_id`,
+      [name.trim(), phone, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).json({ message: "Failed to update profile" });
+  }
+};
+

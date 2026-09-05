@@ -5,8 +5,13 @@ import {
   getAllUsers,
   getEmployeesByDepartment,
   updateUserStatus,
-  createEmployee
+  createEmployee,
+  getUserById,
+  updateProfile,
+  changePassword
 } from "../controllers/userController.js";
+
+
 
 const router = express.Router();
 
@@ -21,5 +26,8 @@ router.get(
 router.put("/:id/status", requireRole("admin"), updateUserStatus);
 
 router.post("/employees", requireRole("admin"), createEmployee);
+
+router.get("/:id", requireRole("citizen", "employee", "admin"), getUserById);
+router.put("/:id/profile", requireRole("citizen", "employee", "admin"), updateProfile);
 
 export default router;
