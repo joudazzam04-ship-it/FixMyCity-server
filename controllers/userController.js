@@ -92,9 +92,9 @@ export const createEmployee = async (req, res) => {
       return res.status(400).json({ message: "An account with this email already exists" });
     }
 
-    const result = await db.query(
+       const result = await db.query(
       `INSERT INTO users (name, email, phone, role, department_id)
-       VALUES ($1, $2, $3, $4, 'employee', $5)
+       VALUES ($1, $2, $3, 'employee', $4)
        RETURNING id, name, email, phone, role, status, joined_on, department_id`,
       [name, email, phone, department_id]
     );

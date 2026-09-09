@@ -7,8 +7,7 @@ import {
   updateUserStatus,
   createEmployee,
   getUserById,
-  updateProfile,
-  changePassword
+  updateProfile
 } from "../controllers/userController.js";
 
 
