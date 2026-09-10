@@ -9,12 +9,12 @@ import authRoutes from "./routes/authRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import lookupRoutes from "./routes/lookupRoutes.js";
 
-const app = express();
+const app = express(); 
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
-app.use(express.json({ limit: "10mb" }));
+app.use(cors()); //the backend communicates with the frontend
+app.use(express.json({ limit: "10mb" })); //Accept JSON data coming from requests.
 
 // Routes
 app.use("/api", lookupRoutes);
